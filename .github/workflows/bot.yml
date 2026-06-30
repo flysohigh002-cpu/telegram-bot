@@ -1,26 +1,29 @@
-name: Telegram Bot Auto Send
+import os
+import requests
 
-on:
-  workflow_dispatch:
+# 從 GitHub Secrets 讀資料
+TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-jobs:
-  send:
-    runs-on: ubuntu-latest
+print("▶ bot start")
+print("TOKEN exists:", bool(TOKEN))
+print("CHAT_ID:", CHAT_ID)
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+# 檢查有沒有讀到（避免白跑）
+if not TOKEN or not CHAT_ID:
+    print("❌ 沒讀到 BOT_TOKEN 或 CHAT_ID，請檢查 GitHub Secrets")
+    exit()
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+# Telegram API
+url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-      - name: Install requests
-        run: pip install requests
+payload = {
+    "chat_id": CHAT_ID,
+    "text": "🔥 GitHub Bot 測試成功！"
+}
 
-      - name: Run bot
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: python bot.py
+# 發送訊息
+r = requests.post(url, data=payload)
+
+print("status code:", r.status_code)
+print("response:", r.text)
